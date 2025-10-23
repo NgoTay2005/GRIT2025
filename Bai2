@@ -1,0 +1,200 @@
+from abc import ABC, abstractmethod
+
+class SinhVien(ABC):
+    def __init__(self, maSV, hoTen, diaChi, tongTinChi, diemTB):
+        self.maSV = maSV
+        self.hoTen = hoTen
+        self.diaChi = diaChi
+        self.tongTinChi = tongTinChi
+        self.diemTB = diemTB
+
+    def nhap(self):
+       
+        pass
+
+    def xuat(self):
+    
+        print(f"Ma SV: {self.maSV}, Ho Ten: {self.hoTen}, Dia Chi: {self.diaChi}, "
+              f"Tong Tin Chi: {self.tongTinChi}, Diem TB: {self.diemTB}", end="")
+
+    @abstractmethod
+    def xet_tot_nghiep(self):
+        pass
+
+    def get_diem_tb(self):
+        return self.diemTB
+
+    def is_dh(self):
+        return False
+
+class SinhVienVB2(SinhVien):
+    def __init__(self, maSV, hoTen, diaChi, tongTinChi, diemTB, diemThiTN):
+        super().__init__(maSV, hoTen, diaChi, tongTinChi, diemTB)
+        self.diemThiTN = diemThiTN
+
+    def xuat(self):
+        super().xuat()
+        print(f", Diem Thi TN: {self.diemThiTN} (He VB2)")
+
+    def xet_tot_nghiep(self):
+        return self.tongTinChi >= 84 and self.diemTB >= 5 and self.diemThiTN >= 5
+
+    @staticmethod
+    def nhap_sv():
+        """Phương thức tĩnh để nhập và tạo đối tượng SVVB2"""
+        print("--- Nhap thong tin SV Van Bang 2 ---")
+        maSV = input("Nhap Ma SV: ")
+        hoTen = input("Nhap Ho Ten: ")
+        diaChi = input("Nhap Dia Chi: ")
+        tongTinChi = int(input("Nhap Tong So Tin Chi: "))
+        diemTB = float(input("Nhap Diem Trung Binh: "))
+        diemThiTN = float(input("Nhap Diem Thi Tot Nghiep: "))
+        return SinhVienVB2(maSV, hoTen, diaChi, tongTinChi, diemTB, diemThiTN)
+
+# ===== LỚP DẪN XUẤT: SINHVIENDH =====
+class SinhVienDH(SinhVien):
+    def __init__(self, maSV, hoTen, diaChi, tongTinChi, diemTB, tenLuanVan, diemLuanVan):
+        super().__init__(maSV, hoTen, diaChi, tongTinChi, diemTB)
+        self.tenLuanVan = tenLuanVan
+        self.diemLuanVan = diemLuanVan
+
+    def xuat(self):
+        super().xuat()
+        print(f", Ten Luan Van: {self.tenLuanVan}, Diem Luan Van: {self.diemLuanVan} (He Dai Hoc)")
+
+    def xet_tot_nghiep(self):
+        # Điều kiện: tín chỉ >= 120, ĐTB >= 5, Điểm luận văn >= 5
+        return self.tongTinChi >= 120 and self.diemTB >= 5 and self.diemLuanVan >= 5
+
+    def is_dh(self):
+        return True
+
+    @staticmethod
+    def nhap_sv():
+        """Phương thức tĩnh để nhập và tạo đối tượng SVDH"""
+        print("--- Nhap thong tin SV Dai Hoc ---")
+        maSV = input("Nhap Ma SV: ")
+        hoTen = input("Nhap Ho Ten: ")
+        diaChi = input("Nhap Dia Chi: ")
+        tongTinChi = int(input("Nhap Tong So Tin Chi: "))
+        diemTB = float(input("Nhap Diem Trung Binh: "))
+        tenLuanVan = input("Nhap Ten Luan Van: ")
+        diemLuanVan = float(input("Nhap Diem Luan Van: "))
+        return SinhVienDH(maSV, hoTen, diaChi, tongTinChi, diemTB, tenLuanVan, diemLuanVan)
+
+# ===== LỚP QUẢN LÝ SINH VIÊN =====
+class QuanLySinhVien:
+    def __init__(self):
+        self.dsSV = [] # Dùng list để lưu trữ các đối tượng SV
+
+    # 1. Tao danh sach sinh vien
+    def tao_danh_sach(self):
+        while True:
+            try:
+                lua_chon = int(input("\nChon loai sinh vien (1: Dai Hoc, 2: VB2, 0: Quay lai): "))
+                if lua_chon == 0:
+                    break
+                elif lua_chon == 1:
+                    sv_moi = SinhVienDH.nhap_sv()
+                elif lua_chon == 2:
+                    sv_moi = SinhVienVB2.nhap_sv()
+                else:
+                    print("Lua chon khong hop le.")
+                    continue
+                
+                self.dsSV.append(sv_moi)
+                print("==> Da them sinh vien.")
+            except ValueError:
+                print("Du lieu nhap vao khong hop le, vui long thu lai.")
+            except Exception as e:
+                print(f"Co loi xay ra: {e}")
+
+    # 2. Xuat danh sach cac sinh vien
+    def xuat_danh_sach(self):
+        if not self.dsSV:
+            print("Danh sach rong.")
+            return
+        print("\n--- DANH SACH SINH VIEN ---")
+        for sv in self.dsSV:
+            sv.xuat() # Tính đa hình
+
+    # 3 & 8. Xuat danh sach sinh vien du dieu kien tot nghiep
+    def xuat_ds_du_dieu_kien(self):
+        print("\n--- DS SINH VIEN DU DIEU KIEN TOT NGHIEP ---")
+        # Sử dụng list comprehension để lọc
+        ds_tot_nghiep = [sv for sv in self.dsSV if sv.xet_tot_nghiep()]
+        
+        if not ds_tot_nghiep:
+            print("Khong co sinh vien nao du dieu kien.")
+            return
+        for sv in ds_tot_nghiep:
+            sv.xuat()
+
+    # 4 & 7. Xuat danh sach sinh vien KHONG du dieu kien tot nghiep
+    def xuat_ds_khong_du_dieu_kien(self):
+        print("\n--- DS SINH VIEN KHONG DU DIEU KIEN TOT NGHIEP ---")
+        ds_chua_tot_nghiep = [sv for sv in self.dsSV if not sv.xet_tot_nghiep()]
+        
+        if not ds_chua_tot_nghiep:
+            print("Tat ca sinh vien deu du dieu kien.")
+            return
+        for sv in ds_chua_tot_nghiep:
+            sv.xuat()
+
+    # 5. Cho biet sinh vien dai hoc nao co diem trung binh cao nhat
+    def tim_svdh_diem_tb_cao_nhat(self):
+        print("\n--- SV DAI HOC CO DIEM TRUNG BINH CAO NHAT ---")
+        
+        # Lọc ra danh sách chỉ chứa SV Đại học
+        ds_svdh = [sv for sv in self.dsSV if sv.is_dh()]
+        
+        if not ds_svdh:
+            print("Khong co sinh vien he Dai Hoc trong danh sach.")
+            return
+
+        # Tìm SV có điểm TB cao nhất trong danh sách đã lọc
+        sv_max = max(ds_svdh, key=lambda sv: sv.get_diem_tb())
+        
+        sv_max.xuat()
+
+# ===== HÀM MAIN: MENU CHỨC NĂNG =====
+def hien_thi_menu():
+    print("\n=========== MENU CHUONG TRINH ===========")
+    print("1. Tao danh sach sinh vien")
+    print("2. Xuat danh sach cac sinh vien")
+    print("3. Xuat DS sinh vien du dieu kien tot nghiep (Yeu cau 3, 8)")
+    print("4. Xuat DS sinh vien khong du dieu kien tot nghiep (Yeu cau 4, 7)")
+    print("5. Tim sinh vien Dai Hoc co diem trung binh cao nhat")
+    print("0. Thoat")
+    print("=========================================")
+
+def main():
+    qlsv = QuanLySinhVien()
+    while True:
+        hien_thi_menu()
+        try:
+            lua_chon = int(input("Lua chon cua ban: "))
+            
+            if lua_chon == 1:
+                qlsv.tao_danh_sach()
+            elif lua_chon == 2:
+                qlsv.xuat_danh_sach()
+            elif lua_chon == 3:
+                qlsv.xuat_ds_du_dieu_kien()
+            elif lua_chon == 4:
+                qlsv.xuat_ds_khong_du_dieu_kien()
+            elif lua_chon == 5:
+                qlsv.tim_svdh_diem_tb_cao_nhat()
+            elif lua_chon == 0:
+                print("Tam biet!")
+                break
+            else:
+                print("Lua chon khong hop le. Vui long chon lai.")
+        
+        except ValueError:
+            print("Vui long nhap mot so nguyen.")
+        except Exception as e:
+            print(f"Da xay ra loi: {e}")
+
+if __name__ == "__main__":
+    main()
